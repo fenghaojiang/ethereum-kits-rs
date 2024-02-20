@@ -21,3 +21,6 @@ serde_json = {version = "1.0.111"}
 reqwest = { version = "0.11", features = ["json"] }
 dunce ={ version = "1"}
 hex = { package = "const-hex", version = "1.6", features = ["hex"] }
+strum = {version = "0.26"}
+strum_macros = {version = "0.26"}
+alloy ={ version = "1.78"}
