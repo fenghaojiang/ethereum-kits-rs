@@ -111,7 +111,7 @@ impl BlockBuilderEndpoint {
                 for builder in BlockBuilderEndpoint::iter() {
                     let builder_endpoint = match builder {
                         BlockBuilderEndpoint::All => vec![],
-                        _ => builder.mainnet_endpoint().unwrap_or(vec![]),
+                        _ => builder.mainnet_endpoint().map_or(vec![], |v| v),
                     };
 
                     endpoints.extend(builder_endpoint);
@@ -143,7 +143,7 @@ impl BlockBuilderEndpoint {
                 for builder in BlockBuilderEndpoint::iter() {
                     let builder_endpoint = match builder {
                         BlockBuilderEndpoint::All => vec![],
-                        _ => builder.goerli_testnet_endpoint().unwrap_or(vec![]),
+                        _ => builder.goerli_testnet_endpoint().map_or(vec![], |v| v),
                     };
 
                     endpoints.extend(builder_endpoint);
@@ -172,7 +172,7 @@ impl BlockBuilderEndpoint {
                 for builder in BlockBuilderEndpoint::iter() {
                     let builder_endpoint = match builder {
                         BlockBuilderEndpoint::All => vec![],
-                        _ => builder.sepolia_testnet_endpoint().unwrap_or(vec![]),
+                        _ => builder.sepolia_testnet_endpoint().map_or(vec![], |v| v),
                     };
 
                     endpoints.extend(builder_endpoint);
