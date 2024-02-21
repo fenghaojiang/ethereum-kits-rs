@@ -149,8 +149,4 @@ fn test_on_sepolia_testnet_endpoints() {
         "{:?}",
         BlockBuilderEndpoint::Flashbots.sepolia_testnet_endpoint()
     );
-    println!(
-        "{:?}",
-        BlockBuilderEndpoint::BeaverBuild.sepolia_testnet_endpoint()
-    );
 }
