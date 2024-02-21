@@ -13,14 +13,14 @@ pub struct Account {
 
 impl Account {
     pub fn new(key: KeyOpt) -> Result<Self> {
-        ensure!(key.phrase_key.len() != 0 || key.private_key.len() != 0);
-        if key.phrase_key.len() > 0 && key.private_key.len() > 0 {
+        ensure!(!key.phrase_key.is_empty() || !key.private_key.is_empty());
+        if !key.phrase_key.is_empty() && !key.private_key.is_empty() {
             return Err(anyhow!(
                 "private key and phrase key are ambigous, one is enough"
             ));
         }
 
-        if key.phrase_key.len() != 0 {
+        if key.phrase_key.is_empty() {
             let wallet = MnemonicBuilder::<English>::default()
                 .phrase(key.phrase_key.as_str())
                 .index(0u32)
