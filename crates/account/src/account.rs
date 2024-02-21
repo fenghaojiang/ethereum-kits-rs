@@ -1,11 +1,10 @@
+use anyhow::{anyhow, ensure, Result};
 use ethers::prelude::coins_bip39::English;
 use ethers::prelude::k256::ecdsa::SigningKey;
-use ethers::signers::{Wallet, LocalWallet, Signer, MnemonicBuilder};
-use anyhow::{anyhow, ensure, Result};
 use ethers::prelude::transaction::eip2718::TypedTransaction;
 use ethers::prelude::Signature;
+use ethers::signers::{LocalWallet, MnemonicBuilder, Signer, Wallet};
 use ethers::types::Address as WalletAddress;
-
 
 pub struct Account {
     pub wallet: Wallet<SigningKey>,
@@ -16,24 +15,34 @@ impl Account {
     pub fn new(key: KeyOpt) -> Result<Self> {
         ensure!(key.phrase_key.len() != 0 || key.private_key.len() != 0);
         if key.phrase_key.len() > 0 && key.private_key.len() > 0 {
-            return Err(anyhow!("private key and phrase key are ambigous, one is enough"));
+            return Err(anyhow!(
+                "private key and phrase key are ambigous, one is enough"
+            ));
         }
 
-
         if key.phrase_key.len() != 0 {
-            let wallet = MnemonicBuilder::<English>::default().phrase(key.phrase_key.as_str()).index(0u32).unwrap().build().unwrap();
+            let wallet = MnemonicBuilder::<English>::default()
+                .phrase(key.phrase_key.as_str())
+                .index(0u32)
+                .unwrap()
+                .build()
+                .unwrap();
             let acc = Account {
-                address: format!("{:#x}", wallet.address()).parse::<WalletAddress>().unwrap(),
+                address: format!("{:#x}", wallet.address())
+                    .parse::<WalletAddress>()
+                    .unwrap(),
                 wallet,
             };
 
             return Ok(acc);
         }
 
-        let wallet:LocalWallet = key.private_key.parse().unwrap();
+        let wallet: LocalWallet = key.private_key.parse().unwrap();
 
         let acc = Account {
-            address: format!("{:#x}", wallet.address()).parse::<WalletAddress>().unwrap(),
+            address: format!("{:#x}", wallet.address())
+                .parse::<WalletAddress>()
+                .unwrap(),
             wallet,
         };
 
@@ -57,7 +66,7 @@ impl Account {
 
 #[derive(Debug, Default)]
 pub struct KeyOpt {
-    pub(crate) private_key: String, 
+    pub(crate) private_key: String,
     pub(crate) phrase_key: String,
 }
 
@@ -69,7 +78,7 @@ impl KeyOpt {
         }
     }
 
-    pub fn new_with_phrase_key(phrase_key: String ) -> Self {
+    pub fn new_with_phrase_key(phrase_key: String) -> Self {
         Self {
             phrase_key,
             ..KeyOpt::default()

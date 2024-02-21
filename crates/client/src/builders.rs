@@ -1,7 +1,7 @@
-use std::{default, vec};
+use anyhow::{anyhow, Ok, Result};
+use std::vec;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-use anyhow::{anyhow, Ok, Result};
 
 /// The list of available MEV builders.
 /// https://www.mev.to/builders
@@ -34,7 +34,7 @@ pub enum BlockBuilderEndpoint {
     SmithBot,
 
     #[default]
-    All, 
+    All,
 }
 
 impl ToString for BlockBuilderEndpoint {
@@ -66,82 +66,45 @@ impl ToString for BlockBuilderEndpoint {
 
             BlockBuilderEndpoint::All => "all".to_string(),
         }
-        
     }
 }
 
 impl BlockBuilderEndpoint {
     pub fn mainnet_endpoint(&self) -> Result<Vec<String>> {
         let endpoints = match self {
-            BlockBuilderEndpoint::Flashbots => vec![
-                "https://relay.flashbots.net/".to_string(),
-            ],
-            BlockBuilderEndpoint::BeaverBuild => vec![
-                "https://rpc.beaverbuild.org/".to_string(),
-            ],
-            BlockBuilderEndpoint::Rsync => vec![
-                "https://rsync-builder.xyz/".to_string(),
-            ],
-            BlockBuilderEndpoint::Builder0x69 => vec![
-                "https://builder0x69.io/".to_string(),
-            ],
-            BlockBuilderEndpoint::GambitLabs => vec![
-                "https://builder.gmbit.co/rpc/".to_string(),
-            ],
-            BlockBuilderEndpoint::EthBuilder => vec![
-                "https://eth-builder.com/".to_string(),
-            ],
-            BlockBuilderEndpoint::Titan => vec![
-                "https://rpc.titanbuilder.xyz/".to_string(), 
-            ],
-            BlockBuilderEndpoint::BuildAI => vec![
-                "https://buildai.net/".to_string(), 
-            ],
-            BlockBuilderEndpoint::Payload => vec![
-                "https://rpc.payload.de/".to_string(), 
-            ],
-            BlockBuilderEndpoint::Lightspeed => vec![
-                "https://rpc.lightspeedbuilder.info/".to_string(),
-            ],
-            BlockBuilderEndpoint::NFactorial => vec![
-                "https://rpc.nfactorial.xyz/".to_string(),
-            ],
-            BlockBuilderEndpoint::BobaBuilder => vec![
-                "https://boba-builder.com/searcher/bundle".to_string(),
-            ],
-            BlockBuilderEndpoint::F1b => vec![
-                "https://rpc.f1b.io/".to_string(),
-            ],
-            BlockBuilderEndpoint::JetBldr => vec![
-                "https://rpc.jetbldr.xyz/".to_string(),
-            ],
-            BlockBuilderEndpoint::PenguinBuild => vec![
-                "https://rpc.penguinbuild.org/".to_string(),
-            ],
-            BlockBuilderEndpoint::LokiBuild => vec![
-                "https://rpc.lokibuilder.xyz/".to_string(),
-            ],
-            BlockBuilderEndpoint::EdenNetwork => vec![
-                "https://api.edennetwork.io/v1/bundle/".to_string(),
-            ],
-            BlockBuilderEndpoint::TBuilder => vec![
-                "https://rpc.tbuilder.xyz/".to_string(),
-            ],
-            BlockBuilderEndpoint::Eigenphi => vec![
-                "https://builder.eigenphi.io/".to_string(),
-            ],
-            BlockBuilderEndpoint::BlockBleelder => vec![
-                "https://blockbeelder.com/rpc/".to_string(),
-            ],
-            BlockBuilderEndpoint::ManifoldFinance => vec![
-                "https://api.securerpc.com/v1/".to_string(),
-            ],
-            BlockBuilderEndpoint::Pandabuild => vec![
-                "https://rpc.pandabuilder.io/".to_string(),
-            ],
-            BlockBuilderEndpoint::SmithBot => vec![
-                "https://smithbot.xyz/".to_string(),
-            ],
+            BlockBuilderEndpoint::Flashbots => vec!["https://relay.flashbots.net/".to_string()],
+            BlockBuilderEndpoint::BeaverBuild => vec!["https://rpc.beaverbuild.org/".to_string()],
+            BlockBuilderEndpoint::Rsync => vec!["https://rsync-builder.xyz/".to_string()],
+            BlockBuilderEndpoint::Builder0x69 => vec!["https://builder0x69.io/".to_string()],
+            BlockBuilderEndpoint::GambitLabs => vec!["https://builder.gmbit.co/rpc/".to_string()],
+            BlockBuilderEndpoint::EthBuilder => vec!["https://eth-builder.com/".to_string()],
+            BlockBuilderEndpoint::Titan => vec!["https://rpc.titanbuilder.xyz/".to_string()],
+            BlockBuilderEndpoint::BuildAI => vec!["https://buildai.net/".to_string()],
+            BlockBuilderEndpoint::Payload => vec!["https://rpc.payload.de/".to_string()],
+            BlockBuilderEndpoint::Lightspeed => {
+                vec!["https://rpc.lightspeedbuilder.info/".to_string()]
+            }
+            BlockBuilderEndpoint::NFactorial => vec!["https://rpc.nfactorial.xyz/".to_string()],
+            BlockBuilderEndpoint::BobaBuilder => {
+                vec!["https://boba-builder.com/searcher/bundle".to_string()]
+            }
+            BlockBuilderEndpoint::F1b => vec!["https://rpc.f1b.io/".to_string()],
+            BlockBuilderEndpoint::JetBldr => vec!["https://rpc.jetbldr.xyz/".to_string()],
+            BlockBuilderEndpoint::PenguinBuild => vec!["https://rpc.penguinbuild.org/".to_string()],
+            BlockBuilderEndpoint::LokiBuild => vec!["https://rpc.lokibuilder.xyz/".to_string()],
+            BlockBuilderEndpoint::EdenNetwork => {
+                vec!["https://api.edennetwork.io/v1/bundle/".to_string()]
+            }
+            BlockBuilderEndpoint::TBuilder => vec!["https://rpc.tbuilder.xyz/".to_string()],
+            BlockBuilderEndpoint::Eigenphi => vec!["https://builder.eigenphi.io/".to_string()],
+            BlockBuilderEndpoint::BlockBleelder => {
+                vec!["https://blockbeelder.com/rpc/".to_string()]
+            }
+            BlockBuilderEndpoint::ManifoldFinance => {
+                vec!["https://api.securerpc.com/v1/".to_string()]
+            }
+            BlockBuilderEndpoint::Pandabuild => vec!["https://rpc.pandabuilder.io/".to_string()],
+            BlockBuilderEndpoint::SmithBot => vec!["https://smithbot.xyz/".to_string()],
             BlockBuilderEndpoint::All => {
                 let mut endpoints = vec![];
 
@@ -155,7 +118,7 @@ impl BlockBuilderEndpoint {
                 }
 
                 endpoints
-            },
+            }
         };
 
         if endpoints.len() == 0 {
@@ -167,15 +130,13 @@ impl BlockBuilderEndpoint {
 
     pub fn goerli_testnet_endpoint(&self) -> Result<Vec<String>> {
         let endpoints = match self {
-            BlockBuilderEndpoint::Flashbots => vec![
-                "https://relay-goerli.flashbots.net/".to_string(),
-            ],
-            BlockBuilderEndpoint::BuildAI => vec![
-                "https://buildai.net/goerli/".to_string(),
-            ],
-            BlockBuilderEndpoint::EdenNetwork => vec![
-                "https://goerli.edennetwork.io/v1/bundle/".to_string(),
-            ],
+            BlockBuilderEndpoint::Flashbots => {
+                vec!["https://relay-goerli.flashbots.net/".to_string()]
+            }
+            BlockBuilderEndpoint::BuildAI => vec!["https://buildai.net/goerli/".to_string()],
+            BlockBuilderEndpoint::EdenNetwork => {
+                vec!["https://goerli.edennetwork.io/v1/bundle/".to_string()]
+            }
             BlockBuilderEndpoint::All => {
                 let mut endpoints = vec![];
 
@@ -189,7 +150,7 @@ impl BlockBuilderEndpoint {
                 }
 
                 endpoints
-            },
+            }
             _ => vec![],
         };
 
@@ -199,12 +160,12 @@ impl BlockBuilderEndpoint {
 
         Ok(endpoints)
     }
-    
+
     pub fn sepolia_testnet_endpoint(&self) -> Result<Vec<String>> {
         let endpoints = match self {
-            BlockBuilderEndpoint::Flashbots => vec![
-                "https://relay-sepolia.flashbots.net".to_string(),
-            ],
+            BlockBuilderEndpoint::Flashbots => {
+                vec!["https://relay-sepolia.flashbots.net".to_string()]
+            }
             BlockBuilderEndpoint::All => {
                 let mut endpoints = vec![];
 
@@ -218,7 +179,7 @@ impl BlockBuilderEndpoint {
                 }
 
                 endpoints
-            },
+            }
             _ => vec![],
         };
 
@@ -228,7 +189,6 @@ impl BlockBuilderEndpoint {
 
         Ok(endpoints)
     }
-
 }
 
 #[test]
@@ -239,12 +199,18 @@ fn test_on_mainnet_endpoints() {
 
 #[test]
 fn test_on_goerli_testnet_endpoints() {
-    println!("{:?}", BlockBuilderEndpoint::Flashbots.goerli_testnet_endpoint());
+    println!(
+        "{:?}",
+        BlockBuilderEndpoint::Flashbots.goerli_testnet_endpoint()
+    );
     println!("{:?}", BlockBuilderEndpoint::All.goerli_testnet_endpoint());
 }
 
 #[test]
 fn test_on_sepolia_testnet_endpoints() {
-    println!("{:?}", BlockBuilderEndpoint::Flashbots.sepolia_testnet_endpoint());
+    println!(
+        "{:?}",
+        BlockBuilderEndpoint::Flashbots.sepolia_testnet_endpoint()
+    );
     println!("{:?}", BlockBuilderEndpoint::All.sepolia_testnet_endpoint());
 }
