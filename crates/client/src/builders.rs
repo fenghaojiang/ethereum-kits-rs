@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Ok, Result};
+use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 /// The list of available MEV builders.
@@ -130,9 +131,43 @@ impl BlockBuilderEndpoint {
     }
 }
 
+pub enum Network {
+    Mainnet,
+    Goerli,
+    Sepolia,
+}
+
+pub fn all_block_builder_endpoints(network: Network) -> Vec<String> {
+    // let item = BlockBuilderEndpoint::iter().map(|builder| builder.mainnet_endpoint().).collect();
+    let mut endpoints = vec![];
+
+    for builder in BlockBuilderEndpoint::iter() {
+        let builder_endpoint = match network {
+            Network::Mainnet => builder
+                .mainnet_endpoint()
+                .map_or("".to_string(), |endpoint| endpoint),
+            Network::Goerli => builder
+                .goerli_testnet_endpoint()
+                .map_or("".to_string(), |endpoint| endpoint),
+            Network::Sepolia => builder
+                .sepolia_testnet_endpoint()
+                .map_or("".to_string(), |endpoint| endpoint),
+        };
+
+        if builder_endpoint.is_empty() {
+            continue;
+        }
+
+        endpoints.push(builder_endpoint);
+    }
+
+    endpoints
+}
+
 #[test]
 fn test_on_mainnet_endpoints() {
     println!("{:?}", BlockBuilderEndpoint::BeaverBuild.mainnet_endpoint());
+    println!("{:?}", all_block_builder_endpoints(Network::Mainnet));
 }
 
 #[test]
@@ -141,6 +176,7 @@ fn test_on_goerli_testnet_endpoints() {
         "{:?}",
         BlockBuilderEndpoint::Flashbots.goerli_testnet_endpoint()
     );
+    println!("{:?}", all_block_builder_endpoints(Network::Goerli));
 }
 
 #[test]
@@ -149,4 +185,5 @@ fn test_on_sepolia_testnet_endpoints() {
         "{:?}",
         BlockBuilderEndpoint::Flashbots.sepolia_testnet_endpoint()
     );
+    println!("{:?}", all_block_builder_endpoints(Network::Sepolia));
 }
