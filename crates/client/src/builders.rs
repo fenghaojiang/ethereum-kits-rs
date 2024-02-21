@@ -1,7 +1,7 @@
 use std::{default, vec};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-use anyhow::{Ok, Result};
+use anyhow::{anyhow, Ok, Result};
 
 /// The list of available MEV builders.
 /// https://www.mev.to/builders
@@ -71,7 +71,7 @@ impl ToString for BlockBuilderEndpoint {
 }
 
 impl BlockBuilderEndpoint {
-    pub fn mainnet_endpoint(&self) -> Vec<String> {
+    pub fn mainnet_endpoint(&self) -> Result<Vec<String>> {
         let endpoints = match self {
             BlockBuilderEndpoint::Flashbots => vec![
                 "https://relay.flashbots.net/".to_string(),
@@ -144,13 +144,11 @@ impl BlockBuilderEndpoint {
             ],
             BlockBuilderEndpoint::All => {
                 let mut endpoints = vec![];
-                // let t = BlockBuilderEndpoint::iter().filter(|&builder| builder != BlockBuilderEndpoint::All).
-                //     map(|builder| builder.mainnet_endpoint());
 
                 for builder in BlockBuilderEndpoint::iter() {
                     let builder_endpoint = match builder {
                         BlockBuilderEndpoint::All => vec![],
-                        _ => self.mainnet_endpoint(),
+                        _ => builder.mainnet_endpoint().unwrap_or(vec![]),
                     };
 
                     endpoints.extend(builder_endpoint);
@@ -160,29 +158,93 @@ impl BlockBuilderEndpoint {
             },
         };
 
-        endpoints
+        if endpoints.len() == 0 {
+            return Err(anyhow!("no mainnet endpoint available"));
+        }
+
+        Ok(endpoints)
     }
 
-    // pub goerli_testnet_endpoint(&self) -> Result<Vec<String>> {
-    //     let endpoints = match self {
-    //         BlockBuilderEndpoint::Flashbots => vec![
+    pub fn goerli_testnet_endpoint(&self) -> Result<Vec<String>> {
+        let endpoints = match self {
+            BlockBuilderEndpoint::Flashbots => vec![
+                "https://relay-goerli.flashbots.net/".to_string(),
+            ],
+            BlockBuilderEndpoint::BuildAI => vec![
+                "https://buildai.net/goerli/".to_string(),
+            ],
+            BlockBuilderEndpoint::EdenNetwork => vec![
+                "https://goerli.edennetwork.io/v1/bundle/".to_string(),
+            ],
+            BlockBuilderEndpoint::All => {
+                let mut endpoints = vec![];
 
-    //         ],
-    //     }
+                for builder in BlockBuilderEndpoint::iter() {
+                    let builder_endpoint = match builder {
+                        BlockBuilderEndpoint::All => vec![],
+                        _ => builder.goerli_testnet_endpoint().unwrap_or(vec![]),
+                    };
 
-    //     Ok(endpoints)
-    // }
+                    endpoints.extend(builder_endpoint);
+                }
+
+                endpoints
+            },
+            _ => vec![],
+        };
+
+        if endpoints.len() == 0 {
+            return Err(anyhow!("no goerli endpoints available"));
+        }
+
+        Ok(endpoints)
+    }
     
+    pub fn sepolia_testnet_endpoint(&self) -> Result<Vec<String>> {
+        let endpoints = match self {
+            BlockBuilderEndpoint::Flashbots => vec![
+                "https://relay-sepolia.flashbots.net".to_string(),
+            ],
+            BlockBuilderEndpoint::All => {
+                let mut endpoints = vec![];
 
-    // pub sepolia_testnet_endpoint(&self) -> Result<Vec<String>> {
+                for builder in BlockBuilderEndpoint::iter() {
+                    let builder_endpoint = match builder {
+                        BlockBuilderEndpoint::All => vec![],
+                        _ => builder.sepolia_testnet_endpoint().unwrap_or(vec![]),
+                    };
 
-    // }
+                    endpoints.extend(builder_endpoint);
+                }
+
+                endpoints
+            },
+            _ => vec![],
+        };
+
+        if endpoints.len() == 0 {
+            return Err(anyhow!("no sepolia endpoints available"));
+        }
+
+        Ok(endpoints)
+    }
 
 }
 
 #[test]
-fn test_on_mainnet_endpoint() {
+fn test_on_mainnet_endpoints() {
     println!("{:?}", BlockBuilderEndpoint::BeaverBuild.mainnet_endpoint());
-
     println!("{:?}", BlockBuilderEndpoint::All.mainnet_endpoint())
+}
+
+#[test]
+fn test_on_goerli_testnet_endpoints() {
+    println!("{:?}", BlockBuilderEndpoint::Flashbots.goerli_testnet_endpoint());
+    println!("{:?}", BlockBuilderEndpoint::All.goerli_testnet_endpoint());
+}
+
+#[test]
+fn test_on_sepolia_testnet_endpoints() {
+    println!("{:?}", BlockBuilderEndpoint::Flashbots.sepolia_testnet_endpoint());
+    println!("{:?}", BlockBuilderEndpoint::All.sepolia_testnet_endpoint());
 }
