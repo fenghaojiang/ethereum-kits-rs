@@ -4,7 +4,7 @@ use ethers::prelude::k256::ecdsa::SigningKey;
 use ethers::prelude::transaction::eip2718::TypedTransaction;
 use ethers::prelude::Signature;
 use ethers::signers::{LocalWallet, MnemonicBuilder, Signer, Wallet};
-use ethers::types::Address as WalletAddress;
+use ethers::types::{Address as WalletAddress, Bytes};
 
 pub struct Account {
     pub wallet: Wallet<SigningKey>,
@@ -58,9 +58,10 @@ impl Account {
         Ok(res)
     }
 
-    pub async fn sign_tx(self, tx: &TypedTransaction) -> Result<Signature> {
+    pub async fn sign_tx(self, tx: &TypedTransaction) -> Result<Bytes> {
         let res = self.wallet.sign_transaction(tx).await?;
-        Ok(res)
+        let tx_bytes = tx.rlp_signed(&res);
+        Ok(tx_bytes)
     }
 }
 

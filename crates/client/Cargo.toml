@@ -6,6 +6,19 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+account = {workspace = true}
+alloy ={ workspace = true }
 anyhow ={ workspace = true }
 strum ={ workspace = true }
 strum_macros ={ workspace = true }
+reqwest ={ workspace = true }
+ethers ={ workspace = true }
+tracing = {workspace = true}
+tracing-subscriber = {workspace = true}
+tokio ={ workspace = true }
+crossbeam = {workspace = true}
+alloy-primitives = {workspace = true}
+serde = {workspace = true}
+serde_json = {workspace = true}
+serde_with = {workspace = true}
+futures = {workspace = true}
