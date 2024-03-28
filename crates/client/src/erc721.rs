@@ -6,7 +6,9 @@ use ethers::types::Address;
 use std::sync::Arc;
 
 // https://eips.ethereum.org/EIPS/eip-721
-abigen!(IERC721, r#"
+abigen!(
+    IERC721,
+    r#"
     [
         function name() external view returns (string _name)
         function symbol() external view returns (string _symbol)
@@ -22,8 +24,8 @@ abigen!(IERC721, r#"
         function getApproved(uint256 _tokenId) external view returns (address)
         function isApprovedForAll(address _owner, address _operator) external view returns (bool)
     ]
-"#);
-
+"#
+);
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
 async fn test_on_erc721_call() -> Result<()> {
@@ -33,14 +35,16 @@ async fn test_on_erc721_call() -> Result<()> {
 
     let rss3_nft_contract = Arc::new(IERC721::new(rss3_genesis_nft, provider_arc));
 
-    let balance = rss3_nft_contract.balance_of(birdring_account).call().await?;
+    let balance = rss3_nft_contract
+        .balance_of(birdring_account)
+        .call()
+        .await?;
     let name = rss3_nft_contract.name().call().await?;
     let symbol = rss3_nft_contract.symbol().call().await?;
-    
+
     println!("rss3 nft balance: {}", balance);
     println!("rss3 nft name: {}", name);
     println!("rss3 nft symbol: {}", symbol);
-
 
     Ok(())
 }

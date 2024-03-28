@@ -47,7 +47,6 @@ async fn test_on_erc20_call() -> Result<()> {
     println!("rss3 symbol: {}", rss3_symbol);
     println!("rss3 total supply: {}", rss3_total_supply);
 
-
     let usdt_name = usdt_contract.name().call().await?;
     let usdt_symbol = usdt_contract.symbol().call().await?;
 

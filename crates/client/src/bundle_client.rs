@@ -6,7 +6,11 @@ use ethers::{
     middleware::builder,
     types::transaction::{eip2718::TypedTransaction, response},
 };
-use futures::{future::{join_all, try_join_all}, stream::FuturesUnordered, try_join};
+use futures::{
+    future::{join_all, try_join_all},
+    stream::FuturesUnordered,
+    try_join,
+};
 use reqwest::{header, Client, Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::{error, Value};
@@ -15,7 +19,7 @@ use tokio::{
     io::join,
     task::{self, JoinSet},
 };
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 #[derive(Default)]
 pub struct BundleClient {
@@ -74,38 +78,43 @@ impl BundleClient {
             for mainnet_url in endpoints.mainnet_endpoint() {
                 let cli = self.client.clone();
                 let bundle_req = json_rpc::to_json_rpc(req_body.clone());
-                
+
                 let sub_task = async move {
                     let bundle_req_copy = bundle_req.clone();
                     let url: String = mainnet_url.clone();
-                    let resp = cli.post::<String>(mainnet_url).body(bundle_req).send().await;
+                    let resp = cli
+                        .post::<String>(mainnet_url)
+                        .body(bundle_req)
+                        .send()
+                        .await;
 
                     match resp {
                         Ok(res) => {
                             if res.status() != StatusCode::OK {
                                 error!("failed to send bundle to endpoint: {}, bundle request param: {}", url, bundle_req_copy);
                                 return Err(anyhow!("failed to send bundle to endpoint"));
-                            }  
+                            }
 
                             let res_str = match res.text().await {
-                                Ok(res_string) => {
-                                    res_string
-                                },
+                                Ok(res_string) => res_string,
                                 Err(e) => {
                                     error!("failed to convert resp text: {}", e);
-                                    return Err(anyhow!("failed to convert resp text"))
+                                    return Err(anyhow!("failed to convert resp text"));
                                 }
                             };
-                             
-                            let resp_json :Value = serde_json::from_str(res_str.as_str())?;
+
+                            let resp_json: Value = serde_json::from_str(res_str.as_str())?;
                             if let Some(bundlehash) = resp_json["result"]["bundleHash"].as_str() {
-                                info!("send bundle to endpoint: {}, bundle hash: {}", url, bundlehash);
+                                info!(
+                                    "send bundle to endpoint: {}, bundle hash: {}",
+                                    url, bundlehash
+                                );
                             } else {
                                 info!("send bundle to endpoint: {}, resp: {}", url, resp_json);
                             }
 
                             Ok(())
-                        },
+                        }
                         Err(e) => {
                             error!("failed to send bundle to endpoint: {}, bundle request param: {}, error: {}", url, bundle_req_copy, e.to_string());
                             return Err(anyhow!("failed to send bundle to endpoint"));
@@ -118,10 +127,8 @@ impl BundleClient {
         }
 
         while let Some(_) = tasks.join_next().await {}
-        Ok(())        
+        Ok(())
     }
-    
-    
 }
 
 #[test]
