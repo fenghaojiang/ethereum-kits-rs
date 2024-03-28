@@ -1,18 +1,19 @@
 use std::fmt::format;
 
 use crate::{builders::BlockBuilderEndpoint, json_rpc};
+use anyhow::{anyhow, Error};
 use ethers::{
     middleware::builder,
     types::transaction::{eip2718::TypedTransaction, response},
 };
-use futures::{future::join_all, stream::FuturesUnordered, StreamExt};
+use futures::{future::{join_all, try_join_all}, stream::FuturesUnordered, try_join};
 use reqwest::{header, Client, Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use serde_json::error;
+use serde_json::{error, Value};
 use serde_with::skip_serializing_none;
 use tokio::{
     io::join,
-    task::{self, JoinHandle},
+    task::{self, JoinSet},
 };
 use tracing::{info, warn, error};
 
@@ -50,61 +51,77 @@ impl BundleClient {
     }
 
     /// return bundle hash if exist
-    pub fn send_bundle(
+    pub async fn send_bundle(
         &self,
         raw_txns: Vec<String>,
         target_block: u64,
         builder_endpoints: Vec<BlockBuilderEndpoint>,
-    ) -> anyhow::Result<String> {
+    ) -> anyhow::Result<()> {
+        if raw_txns.is_empty() {
+            error!("empty txns is not allowed");
+            return Err(anyhow!("empty txns"));
+        }
+
         let req_body = serde_json::to_string_pretty(&BundleParams {
             txs: raw_txns,
             block_number: format!("{:#x}", target_block),
             ..Default::default()
         })?;
 
-        let mut handlers: FuturesUnordered<JoinHandle<_>> = FuturesUnordered::new();
+        let mut tasks = JoinSet::new();
 
         for endpoints in builder_endpoints.iter() {
             for mainnet_url in endpoints.mainnet_endpoint() {
                 let cli = self.client.clone();
                 let bundle_req = json_rpc::to_json_rpc(req_body.clone());
-                let bundle_req_copy = bundle_req.clone();
-                let url = mainnet_url.clone();
+                
+                let sub_task = async move {
+                    let bundle_req_copy = bundle_req.clone();
+                    let url: String = mainnet_url.clone();
+                    let resp = cli.post::<String>(mainnet_url).body(bundle_req).send().await;
 
-                handlers.push(tokio::spawn(
-                   async move {
-                    
-                    let result =  cli.post::<String>(mainnet_url).body(bundle_req).send().await.map_err(|e| {
-                        error!("failed to send bundle to endpoint: endpoint: {}, bundle request param: {}, error: {}", url, bundle_req_copy, e.to_string());
-                    });
+                    match resp {
+                        Ok(res) => {
+                            if res.status() != StatusCode::OK {
+                                error!("failed to send bundle to endpoint: {}, bundle request param: {}", url, bundle_req_copy);
+                                return Err(anyhow!("failed to send bundle to endpoint"));
+                            }  
 
-                    // match result {
-                    //     Ok(resp) => {
-                    //         let resp = match resp.status() {
-                    //             StatusCode::OK => {
-                    //                 let response_body = resp.text().await;
-                    //                 info!("sending bundle to endpoint success, endpoint: {}, bundle request params: {}, response: {:?}", mainnet_url, bundle_req, response_body);
-                    //                 return resp;
-                    //             },
-                    //             _ => {
-                    //                 let response_body = resp.text().await;
-                    //                 warn!("failed to send bundle to endpoint, endpoint: {}, bundle request params: {}, response: {:?}", mainnet_url, bundle_req, response_body);
-                    //                 return resp;
-                    //             }
-                    //         };
-                    //         return resp;
-                    //     },
-                    
-                    // }    
-                   } 
-                ));
+                            let res_str = match res.text().await {
+                                Ok(res_string) => {
+                                    res_string
+                                },
+                                Err(e) => {
+                                    error!("failed to convert resp text: {}", e);
+                                    return Err(anyhow!("failed to convert resp text"))
+                                }
+                            };
+                             
+                            let resp_json :Value = serde_json::from_str(res_str.as_str())?;
+                            if let Some(bundlehash) = resp_json["result"]["bundleHash"].as_str() {
+                                info!("send bundle to endpoint: {}, bundle hash: {}", url, bundlehash);
+                            } else {
+                                info!("send bundle to endpoint: {}, resp: {}", url, resp_json);
+                            }
+
+                            Ok(())
+                        },
+                        Err(e) => {
+                            error!("failed to send bundle to endpoint: {}, bundle request param: {}, error: {}", url, bundle_req_copy, e.to_string());
+                            return Err(anyhow!("failed to send bundle to endpoint"));
+                        }
+                    }
+                };
+
+                tasks.spawn(sub_task);
             }
         }
 
-        join_all(handlers);
-
-        Ok("".to_string())
+        while let Some(_) = tasks.join_next().await {}
+        Ok(())        
     }
+    
+    
 }
 
 #[test]
